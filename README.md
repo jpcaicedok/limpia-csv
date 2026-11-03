@@ -16,9 +16,13 @@ Requiere Python 3.9 o superior. No tiene dependencias externas.
 ```bash
 python limpia_csv.py clientes.csv
 python limpia_csv.py clientes.csv -o clientes_ok.csv
+python limpia_csv.py clientes.csv --solo-revisar
+python limpia_csv.py clientes.csv --solo-revisar --informe informe.json
 ```
 
-Si el archivo de salida ya existe, el programa se detiene sin sobrescribirlo.
+Con `--solo-revisar` ves el resumen sin crear el archivo limpio, y con `--informe` guardas ese resumen en JSON.
+
+Si un archivo de salida ya existe, el programa se detiene sin sobrescribirlo.
 
 La primera fila se trata siempre como encabezado.
 

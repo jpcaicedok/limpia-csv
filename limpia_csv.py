@@ -4,6 +4,7 @@
 import argparse
 import csv
 import io
+import json
 import sys
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -133,6 +134,8 @@ def crear_parser():
     parser = argparse.ArgumentParser(description="Limpia un archivo CSV sin modificar el original.")
     parser.add_argument("entrada", type=Path, help="archivo CSV de entrada")
     parser.add_argument("-o", "--salida", type=Path, help="archivo de salida (por defecto, <nombre>_limpio.csv)")
+    parser.add_argument("--solo-revisar", action="store_true", help="muestra el resumen sin crear el archivo limpio")
+    parser.add_argument("--informe", type=Path, help="guarda el resumen en un archivo JSON")
     return parser
 
 
@@ -142,16 +145,21 @@ def main(argv=None):
 
     try:
         filas, informe = limpiar_datos(args.entrada.read_bytes())
-        escribir_csv(salida, filas, informe.delimitador)
-    except FileExistsError:
-        print(f"Error: {salida} ya existe; no se sobrescribe.", file=sys.stderr)
+        if not args.solo_revisar:
+            escribir_csv(salida, filas, informe.delimitador)
+        if args.informe:
+            with open(args.informe, "x", encoding="utf-8") as archivo:
+                json.dump(informe.a_dict(), archivo, ensure_ascii=False, indent=2)
+    except FileExistsError as error:
+        print(f"Error: {error.filename} ya existe; no se sobrescribe.", file=sys.stderr)
         return 2
     except OSError as error:
         print(f"Error: {error}", file=sys.stderr)
         return 2
 
     imprimir_resumen(informe)
-    print(f"Guardado en:            {salida}")
+    if not args.solo_revisar:
+        print(f"Guardado en:            {salida}")
     return 0
 
 

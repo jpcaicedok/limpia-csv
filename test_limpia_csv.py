@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -63,6 +64,23 @@ class PruebasCLI(unittest.TestCase):
             self.assertEqual(salida.read_text(encoding="utf-8").splitlines(), ["a,b", "1,2"])
             self.assertEqual(entrada.read_bytes(), b"a,b\n1,2\n1,2\n")
             self.assertEqual(main([str(entrada)]), 2)
+
+    def test_solo_revisar_no_crea_archivo(self):
+        with tempfile.TemporaryDirectory() as carpeta:
+            entrada = Path(carpeta) / "datos.csv"
+            entrada.write_bytes(b"a,b\n1,2\n")
+            self.assertEqual(main([str(entrada), "--solo-revisar"]), 0)
+            self.assertFalse((Path(carpeta) / "datos_limpio.csv").exists())
+
+    def test_guarda_informe_json(self):
+        with tempfile.TemporaryDirectory() as carpeta:
+            entrada = Path(carpeta) / "datos.csv"
+            informe = Path(carpeta) / "informe.json"
+            entrada.write_bytes(b"a,b\n1,2\n1,2\n")
+            self.assertEqual(main([str(entrada), "--solo-revisar", "--informe", str(informe)]), 0)
+            datos = json.loads(informe.read_text(encoding="utf-8"))
+            self.assertEqual(datos["duplicados"], 1)
+            self.assertEqual(datos["filas_salida"], 1)
 
     def test_archivo_inexistente(self):
         self.assertEqual(main(["/ruta/que/no/existe.csv"]), 2)
